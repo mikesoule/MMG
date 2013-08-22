@@ -1,0 +1,38 @@
+<!--phpunit bootstrap="../public/index.php" colors="true"-->
+<phpunit colors="true">
+
+<!-- setup php constants and settings for testing -->
+<php>
+    <const name="APPLICATION_ENV" value="testing" />
+    <!-- <ini name="error_reporting" value="E_ALL | E_STRICT ^ E_NOTICE"/> -->
+    <ini name="error_reporting" value="E_ALL"/>
+    <ini name="date.timezone" value="America/New_York"/>
+</php>
+
+<!-- setup the default test suites -->
+<testsuites>
+    <testsuite name="All Tests">
+        <directory>.</directory>
+    </testsuite>
+</testsuites>
+
+<!-- specify which files should be included in code coverage reports -->
+<filter>
+    <whitelist>
+        <directory suffix="php">../library</directory>
+        <exclude>
+        </exclude>
+    </whitelist>
+</filter>
+
+<!-- logging for the unit test coverage -->
+<logging>
+    <log type="coverage-html"
+        target="../build/phpunit"
+        charset="UTF-8"
+        yui="true"
+        highlight="false"
+        lowUpperBound="50"
+        highLowerBound="80" />
+</logging>
+</phpunit>

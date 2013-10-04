@@ -48,6 +48,13 @@ class Pdo implements GatewayInterface
     protected $_pdoClass = '\PDO';
     
     /**
+     * Array of SQL definitions
+     *
+     * @var array
+     */
+    protected $_sqlDefinitions = array();
+    
+    /**
      * Constructor
      *
      * @param   array $options

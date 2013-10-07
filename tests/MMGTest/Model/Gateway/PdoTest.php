@@ -43,7 +43,7 @@ class PdoTest extends TestCase
      * @var array
      */
     public $options = array(
-        'pdoClass'      => '\\MMGTest\\Model\\Gateway\\PDOMock',
+        'driverClass'      => '\\MMGTest\\Model\\Gateway\\PDOMock',
         'dsn'           => 'mysql:dbname=testdb;host=localhost',
         'username'      => 'testuser',
         'password'      => 'testpass',
@@ -69,7 +69,7 @@ class PdoTest extends TestCase
             ->getMock();
         
         $reflection = new ReflectionClass($this->gateway);
-        $property = $reflection->getProperty('_pdo');
+        $property = $reflection->getProperty('_driver');
         $property->setAccessible(true);
         $property->setValue($this->gateway, $this->pdo);
     }

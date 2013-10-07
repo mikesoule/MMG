@@ -14,8 +14,9 @@
 namespace MMG\Model\Gateway;
 
 /**
- * Require the gateway interface.
+ * Require the gateway abstract and interface.
  */
+require_once dirname(__FILE__) . '/GatewayAbstract.php';
 require_once dirname(__FILE__) . '/GatewayInterface.php';
 
 /**
@@ -30,22 +31,15 @@ require_once dirname(__FILE__) . '/GatewayInterface.php';
  * @license     http://mikesoule.github.com/license.html New BSD License
  * @version     Release: 0.0.1
  */
-class Pdo implements GatewayInterface
+class Pdo extends GatewayAbstract implements GatewayInterface
 {
     
     /**
-     * PDO instance
-     *
-     * @var \PDO
-     */
-    protected $_pdo;
-    
-    /**
-     * Name of PDO class to use.
+     * Name of driver class to use.
      *
      * @var string
      */
-    protected $_pdoClass = '\PDO';
+    protected $_driverClass = '\PDO';
     
     /**
      * Constructor
@@ -55,8 +49,8 @@ class Pdo implements GatewayInterface
      */
     public function __construct($options = array())
     {    
-        if (array_key_exists('pdoClass', $options)) {
-            $this->_pdoClass = $options['pdoClass'];
+        if (array_key_exists('driverClass', $options)) {
+            $this->_driverClass = $options['driverClass'];
         }
         
         $dsn            = isset($options['dsn']) ? $options['dsn'] : null;
@@ -133,9 +127,9 @@ class Pdo implements GatewayInterface
     protected function _insert($table, array $data, $sequence = null)
     {
         $sql = $this->_getInsertSql($table, $data);
-        $stmt = $this->_pdo->query($sql);
+        $stmt = $this->_driver->query($sql);
         
-        return $this->_pdo->lastInsertId($sequence);
+        return $this->_driver->lastInsertId($sequence);
     } // END function _insert
     
     /**
@@ -167,7 +161,7 @@ class Pdo implements GatewayInterface
     protected function _read($table, array $criteria)
     {
         $sql = $this->_getSelectSql($table, $criteria);
-        $stmt = $this->_pdo->query($sql);
+        $stmt = $this->_driver->query($sql);
         
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     } // END function _read
@@ -203,7 +197,7 @@ class Pdo implements GatewayInterface
     {
         $sql = $this->_getUpdateSql($table, $data, $criteria);
         
-        return $this->_pdo->exec($sql);
+        return $this->_driver->exec($sql);
     } // END function _update
     
     /**
@@ -238,7 +232,7 @@ class Pdo implements GatewayInterface
     {
         $sql = $this->_getDeleteSql($table, $criteria);
         
-        return $this->_pdo->exec($sql);
+        return $this->_driver->exec($sql);
     } // END function _delete
     
     /**
@@ -287,7 +281,7 @@ class Pdo implements GatewayInterface
     protected function _quoteValues(array $values)
     {
         foreach ($values as $key => $val) {
-            $values[$key] = $this->_pdo->quote($val);
+            $values[$key] = $this->_driver->quote($val);
         }
         
         return $values;
@@ -304,8 +298,8 @@ class Pdo implements GatewayInterface
      */
     protected function _initPdo($dsn, $username = null, $password = null, array $driverOptions = array())
     {
-        $class = $this->_pdoClass;
-        $this->_pdo = new $class($dsn, $username, $password, $driverOptions);
+        $class = $this->_driverClass;
+        $this->_driver = new $class($dsn, $username, $password, $driverOptions);
     } // END function _initPdo
     
 } // END class Pdo

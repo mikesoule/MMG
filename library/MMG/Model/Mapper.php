@@ -176,28 +176,16 @@ abstract class Mapper
      */
     public function find($criteria = array())
     {
-        $class = $this->_modelClass;
-        $collection = new Collection();
-        
-        if ($model = $this->_getModelInstance($class, $criteria)) {
-            $collection->push($model);
-            return $collection;
+        if ($model = $this->_getModelInstance($this->_modelClass, $criteria)) {
+            return new Collection(array($model));
         }
         
         $map = $this->_mapToSearchGateway($criteria);
         $gateway = $this->_getGateway($map->gateway);
         $results = $gateway->read($map->store, $map->criteria);
         
-        foreach ($results as $data) {
-            $map = $this->_mapToModel($data);
-            $model = new $class(array(
-                'data' => $map->data
-            ));
-            $this->_addModelInstance($model);
-            $collection->push($model);
-        }
+        return $this->_getCollection($results);
         
-        return $collection;
     } // END function find
     
     /**
@@ -303,6 +291,29 @@ abstract class Mapper
         return $date->format('Y-m-d H:i:s');
         
     } // END function _convertDateTime
+    
+    /**
+     * Returns a collection of models from the given data.
+     *
+     * @param   array $results Result set as associative array
+     * @return  Collection
+     */
+    protected function _getCollection(array $results)
+    {
+        $class = $this->_modelClass;
+        $collection = new Collection;
+        
+        foreach ($results as $data) {
+            $map = $this->_mapToModel($data);
+            $model = new $class(array(
+                'data' => $map->data
+            ));
+            $this->_addModelInstance($model);
+            $collection->push($model);
+        }
+        
+        return $collection;
+    } // END function _getCollection
     
     /**
      * Map search criteria to gateway

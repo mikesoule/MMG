@@ -241,17 +241,58 @@ class CollectionTest extends TestCase
     } // END function testGetByIdentity
     
     /**
+     * Tests that a property can be set on all models.
+     *
+     * @return  void
+     */
+    public function test__set()
+    {
+        $expected = 'Marklar';
+        
+        $this->collection->name = $expected;
+        
+        foreach ($this->collection as $model) {
+            $this->assertEquals($expected, $model->name);
+        }
+        
+    } // END function testGetPropArray
+    
+    /**
+     * Tests that a property can be fetched from all models.
+     *
+     * @return  void
+     */
+    public function test__get()
+    {
+        $expected = array();
+        
+        foreach ($this->models as $model) {
+            $expected[$model->id] = $model->name;
+        }
+        
+        $result = $this->collection->name;
+        
+        $this->assertEquals($expected, $result);
+        
+    } // END function testGetPropArray
+    
+    /**
      * Tests the __call override
      *
      * @return  void
      */
     public function test__call()
     {
-        $lastModel = end($this->models);
-        $expected = $lastModel->getIdentity();
-        $actual = $this->collection->getIdentity();
+        $expected = array();
         
-        $this->assertEquals($expected, $actual);
+        foreach ($this->models as $model) {
+            $expected[$model->id] = "MockModel{$this->_modelSuffix}Mapper";
+        }
+        
+        $result = $this->collection->getMapperClass();
+        
+        $this->assertEquals($expected, $result);
+        
     } // END function test__call
     
     /**

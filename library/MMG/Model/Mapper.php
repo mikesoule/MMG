@@ -131,11 +131,7 @@ abstract class Mapper
                     $model->$idProperty = $map->id;
                 }
             } else {
-                $gateway->update(
-                    $map->store, 
-                    $map->data, 
-                    $map->criteria
-                );
+                $gateway->update($map->store, $map->data, $map->criteria);
             }
         }
         
@@ -157,11 +153,7 @@ abstract class Mapper
 
             foreach ($maps as $map) {
                 $gateway = $this->_getGateway($map->gateway);
-                
-                $gateway->delete(
-                    $map->store,
-                    $map->criteria
-                );
+                $gateway->delete($map->store, $map->criteria);
             }
         }
         
@@ -227,23 +219,34 @@ abstract class Mapper
     protected function _getModelInstance($class, $identity)
     {
         if (is_array($identity)) {
-            if (
-                !array_key_exists($this->_idProperty, $identity) || 
-                count($identity) != 1
-            ) {
+            if (count($identity) != 1) {
                 return;
             }
             
-            $identity = $identity[$this->_idProperty];
+            $identity = $this->_getIdentityFromCriteria($identity);
         }
         
-        if (array_key_exists($class, self::$_modelInstances)) {
-            if (array_key_exists($identity, self::$_modelInstances[$class])) {
-                return self::$_modelInstances[$class][$identity];
-            }
+        if (isset(self::$_modelInstances[$class][$identity])) {
+            return self::$_modelInstances[$class][$identity];
         }
         
     } // END function _getModelInstance
+    
+    /**
+     * Return the identity from criteria array.
+     *
+     * @param   array $criteria
+     * @return  scalar|null
+     */
+    protected function _getIdentityFromCriteria(array $criteria)
+    {
+        if (isset($criteria[$this->_idProperty])) {
+            return $criteria[$this->_idProperty];
+        }
+        
+        return null;
+        
+    } // END function _getIdentityFromCriteria
     
     /**
      * Add a gateway for all mappers to use.

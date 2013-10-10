@@ -117,6 +117,21 @@ class Pdo extends GatewayAbstract implements GatewayInterface
     } // END function delete
     
     /**
+     * Quote all values in an array to prevent SQL injection.
+     *
+     * @param   array $values Values to be quoted.
+     * @return  array An array of quoted values
+     */
+    public function quoteValues(array $values)
+    {
+        foreach ($values as $key => $val) {
+            $values[$key] = $this->_driver->quote($val);
+        }
+        
+        return $values;
+    } // END function quoteValues
+    
+    /**
      * Insert data into a table and return the last insert ID.
      *
      * @param   string $table The table name
@@ -145,7 +160,7 @@ class Pdo extends GatewayAbstract implements GatewayInterface
     protected function _getInsertSql($table, array $data)
     {
         $columns    = implode(', ', array_keys($data));
-        $values     = implode(', ', $this->_quoteValues($data));
+        $values     = implode(', ', $this->quoteValues($data));
         $sql        = "INSERT INTO $table ($columns) VALUES ($values)";
         
         return $sql;
@@ -210,7 +225,7 @@ class Pdo extends GatewayAbstract implements GatewayInterface
      */
     protected function _getUpdateSql($table, array $data, array $criteria)
     {
-        $data = $this->_quoteValues($data);
+        $data = $this->quoteValues($data);
         $columns = array();
         
         foreach ($data as $key => $val) {
@@ -262,7 +277,7 @@ class Pdo extends GatewayAbstract implements GatewayInterface
      */
     protected function _getWhere(array $criteria)
     {
-        $criteria = $this->_quoteValues($criteria);
+        $criteria = $this->quoteValues($criteria);
         $values = array();
         
         foreach ($criteria as $key => $val) {
@@ -271,21 +286,6 @@ class Pdo extends GatewayAbstract implements GatewayInterface
         
         return implode(' AND ', $values);
     } // END function _getWhere
-    
-    /**
-     * Quote all values in an array to prevent SQL injection.
-     *
-     * @param   array $values Values to be quoted.
-     * @return  array An array of quoted values
-     */
-    protected function _quoteValues(array $values)
-    {
-        foreach ($values as $key => $val) {
-            $values[$key] = $this->_driver->quote($val);
-        }
-        
-        return $values;
-    } // END function _quoteValues
     
     /**
      * Initialize the PDO instance.

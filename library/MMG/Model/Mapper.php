@@ -131,11 +131,7 @@ abstract class Mapper
                     $model->$idProperty = $map->id;
                 }
             } else {
-                $gateway->update(
-                    $map->store, 
-                    $map->data, 
-                    $map->criteria
-                );
+                $gateway->update($map->store, $map->data, $map->criteria);
             }
         }
         
@@ -157,11 +153,7 @@ abstract class Mapper
 
             foreach ($maps as $map) {
                 $gateway = $this->_getGateway($map->gateway);
-                
-                $gateway->delete(
-                    $map->store,
-                    $map->criteria
-                );
+                $gateway->delete($map->store, $map->criteria);
             }
         }
         
@@ -176,28 +168,16 @@ abstract class Mapper
      */
     public function find($criteria = array())
     {
-        $class = $this->_modelClass;
-        $collection = new Collection();
-        
-        if ($model = $this->_getModelInstance($class, $criteria)) {
-            $collection->push($model);
-            return $collection;
+        if ($model = $this->_getModelInstance($this->_modelClass, $criteria)) {
+            return new Collection(array($model));
         }
         
         $map = $this->_mapToSearchGateway($criteria);
         $gateway = $this->_getGateway($map->gateway);
         $results = $gateway->read($map->store, $map->criteria);
         
-        foreach ($results as $data) {
-            $map = $this->_mapToModel($data);
-            $model = new $class(array(
-                'data' => $map->data
-            ));
-            $this->_addModelInstance($model);
-            $collection->push($model);
-        }
+        return $this->_getCollection($results);
         
-        return $collection;
     } // END function find
     
     /**
@@ -239,23 +219,34 @@ abstract class Mapper
     protected function _getModelInstance($class, $identity)
     {
         if (is_array($identity)) {
-            if (
-                !array_key_exists($this->_idProperty, $identity) || 
-                count($identity) != 1
-            ) {
+            if (count($identity) != 1) {
                 return;
             }
             
-            $identity = $identity[$this->_idProperty];
+            $identity = $this->_getIdentityFromCriteria($identity);
         }
         
-        if (array_key_exists($class, self::$_modelInstances)) {
-            if (array_key_exists($identity, self::$_modelInstances[$class])) {
-                return self::$_modelInstances[$class][$identity];
-            }
+        if (isset(self::$_modelInstances[$class][$identity])) {
+            return self::$_modelInstances[$class][$identity];
         }
         
     } // END function _getModelInstance
+    
+    /**
+     * Return the identity from criteria array.
+     *
+     * @param   array $criteria
+     * @return  scalar|null
+     */
+    protected function _getIdentityFromCriteria(array $criteria)
+    {
+        if (isset($criteria[$this->_idProperty])) {
+            return $criteria[$this->_idProperty];
+        }
+        
+        return null;
+        
+    } // END function _getIdentityFromCriteria
     
     /**
      * Add a gateway for all mappers to use.
@@ -303,6 +294,29 @@ abstract class Mapper
         return $date->format('Y-m-d H:i:s');
         
     } // END function _convertDateTime
+    
+    /**
+     * Returns a collection of models from the given data.
+     *
+     * @param   array $results Result set as associative array
+     * @return  Collection
+     */
+    protected function _getCollection(array $results)
+    {
+        $class = $this->_modelClass;
+        $collection = new Collection;
+        
+        foreach ($results as $data) {
+            $map = $this->_mapToModel($data);
+            $model = new $class(array(
+                'data' => $map->data
+            ));
+            $this->_addModelInstance($model);
+            $collection->push($model);
+        }
+        
+        return $collection;
+    } // END function _getCollection
     
     /**
      * Map search criteria to gateway

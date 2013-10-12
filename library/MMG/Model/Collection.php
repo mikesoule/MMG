@@ -170,17 +170,55 @@ class Collection
     } // END function count
     
     /**
+     * Sets a property on all models.
+     *
+     * @param   string $name
+     * @param   mixed $value
+     * @return  Collection Provides a fluent interface.
+     */
+    public function __set($name, $value)
+    {
+        foreach ($this as $model) {
+            $model->$name = $value;
+        }
+        
+        return $this;
+    } // END function __set
+    
+    /**
+     * Return an array of a property value from all models.
+     *
+     * @param   string $name
+     * @return  array Array of values keyed by identity
+     */
+    public function __get($name)
+    {
+        $values = array();
+        
+        foreach ($this as $model) {
+            $values[$model->getIdentity()] = $model->$name;
+        }
+        
+        return $values;
+        
+    } // END function __get
+    
+    /**
      * Pass method calls down to each model in the collection.
      *
      * @return  mixed The result of the call on the last model
      */
     public function __call($method, $args)
     {
+        $results = array();
+        
         foreach ($this as $model) {
-            $result = $this->_callModelMethod($model, $method, $args);
+            $id = $model->getIdentity();
+            $results[$id] = $this->_callModelMethod($model, $method, $args);
         }
         
-        return $result;
+        return $results;
+        
     } // END function __call
     
     /**

@@ -26,6 +26,13 @@ class DataMap
 {
     
     /**
+     * Gateway name for this map.
+     *
+     * @var string
+     */
+    public $gateway;
+    
+    /**
      * Name of the storage end-point.
      *
      * @var string
@@ -53,5 +60,23 @@ class DataMap
      * @var array
      */
     public $criteria = array();
+    
+    /**
+     * Constructor accepts configuration options.
+     *
+     * @param   array $options
+     * @return  void
+     */
+    public function __construct($options = array())
+    {
+        settype($options, 'array');
+        
+        foreach ($options as $name => $value) {
+            if (property_exists($this, $name)) {
+                $this->$name = $value;
+            }
+        }
+        
+    } // END function __construct
     
 } // END class DataMap

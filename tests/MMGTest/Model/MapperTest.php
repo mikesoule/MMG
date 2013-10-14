@@ -506,7 +506,7 @@ class MapperTest extends TestCase
         }
         
         $this->gateway = $this->getMockBuilder('MMG\\Model\\Gateway\\Pdo')
-            ->setMethods(array('_initPdo', 'create', 'read', 'update', 'delete'))
+            ->disableOriginalConstructor()
             ->getMock();
         
         Mapper::addGateway($this->gatewayName, $this->gateway);

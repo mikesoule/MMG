@@ -42,78 +42,77 @@ class Pdo extends GatewayAbstract implements GatewayInterface
     protected $_driverClass = '\PDO';
     
     /**
-     * Constructor
+     * List of required driver options.
      *
-     * @param   array $options
-     * @return  void
+     * @var array
      */
-    public function __construct($options = array())
-    {    
-        if (array_key_exists('driverClass', $options)) {
-            $this->_driverClass = $options['driverClass'];
-        }
-        
-        $dsn            = isset($options['dsn']) ? $options['dsn'] : null;
-        $username       = isset($options['username']) ? $options['username'] : null;
-        $password       = isset($options['password']) ? $options['password'] : null;
-        $driverOptions  = isset($options['driverOptions']) ? $options['driverOptions'] : array();
-        
-        $this->_initPdo($dsn, $username, $password, $driverOptions);
-    } // END function __construct
+    protected $_requiredOptions = array('host', 'name');
     
     /**
      * Store a new record.
      *
-     * @param   string $store The table or function for storing data
+     * @param   string $table The table or function for storing data
      * @param   array $data The data to be stored
-     * @param   string $sequence The sequence name for a primary/increment key
-     * @param   boolean $isFunction Flag for calling database functions
      * @return  interger|string Unique identifier
      * @todo    Implement calling database functions
      */
-    public function create($store, array $data, $sequence = null, $isFunction = false)
+    public function create($table, array $data)
     {
-        return $this->_insert($store, $data, $sequence);
+        $sql = $this->_getInsertSql($table, $data);
+        $stmt = $this->_driver->query($sql);
+        
+        return $this->_driver->lastInsertId();
+        
     } // END function create
     
     /**
      * Read data from storage.
      *
-     * @param   string $store The path/table/collection to read from
+     * @param   string $table The path/table/collection to read from
      * @param   array $criteria Criteria for updating
      * @param   boolean $isFunction Flag for calling database functions
      * @return  array Multi-dimensional array of data read from storage
      */
-    public function read($store, $criteria = array(), $isFunction = false)
+    public function read($table, $criteria = array())
     {
-        return $this->_read($store, $criteria);
+        $sql = $this->_getSelectSql($table, $criteria);
+        $stmt = $this->_driver->query($sql);
+        
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        
     } // END function read
     
     /**
      * Update data in storage.
      *
-     * @param   string $store The path/table/collection for the data
+     * @param   string $table The path/table/collection for the data
      * @param   array $data The data to be stored
      * @param   array $criteria Criteria for updating
      * @param   boolean $isFunction Flag for calling database functions
      * @return  integer The number of items updated
      */
-    public function update($store, array $data, $criteria = array(), $isFunction = false)
+    public function update($table, array $data, $criteria = array())
     {
-        return $this->_update($store, $data, $criteria);
+        $sql = $this->_getUpdateSql($table, $data, $criteria);
+        
+        return $this->_driver->exec($sql);
+        
     } // END function update
     
     /**
      * Delete data from storage.
      *
-     * @param   string $store The path/table/collection to delete from
+     * @param   string $table The path/table/collection to delete from
      * @param   array $criteria Criteria for deletion
      * @param   boolean $isFunction Flag for calling database functions
      * @return  integer The number of items updated
      */
-    public function delete($store, $criteria = array(), $isFunction = false)
+    public function delete($table, $criteria = array())
     {
-        return $this->_delete($store, $criteria);
+        $sql = $this->_getDeleteSql($table, $criteria);
+        
+        return $this->_driver->exec($sql);
+        
     } // END function delete
     
     /**
@@ -130,22 +129,6 @@ class Pdo extends GatewayAbstract implements GatewayInterface
         
         return $values;
     } // END function quoteValues
-    
-    /**
-     * Insert data into a table and return the last insert ID.
-     *
-     * @param   string $table The table name
-     * @param   array $data The data to be inserted
-     * @param   string $sequence The sequence name for a primary/increment key
-     * @return  integer|string
-     */
-    protected function _insert($table, array $data, $sequence = null)
-    {
-        $sql = $this->_getInsertSql($table, $data);
-        $stmt = $this->_driver->query($sql);
-        
-        return $this->_driver->lastInsertId($sequence);
-    } // END function _insert
     
     /**
      * Get a driver-specific SQL insert string.
@@ -167,21 +150,6 @@ class Pdo extends GatewayAbstract implements GatewayInterface
     } // END function _getInsertSql
     
     /**
-     * Return rows from a database.
-     *
-     * @param   string $table The table name
-     * @param   array $criteria Criteria for selecting
-     * @return  array
-     */
-    protected function _read($table, array $criteria)
-    {
-        $sql = $this->_getSelectSql($table, $criteria);
-        $stmt = $this->_driver->query($sql);
-        
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    } // END function _read
-    
-    /**
      * Generate an SQL SELECT string.
      *
      * @param   string $table The table name
@@ -199,21 +167,6 @@ class Pdo extends GatewayAbstract implements GatewayInterface
         
         return $sql;
     } // END function _getSelectSql
-    
-    /**
-     * Update data in a table and return the number of affected rows.
-     *
-     * @param   string $table The table name
-     * @param   array $data The data to be inserted
-     * @param   array $criteria Criteria for updating
-     * @return  integer The number of rows affected by the update
-     */
-    protected function _update($table, array $data, array $criteria)
-    {
-        $sql = $this->_getUpdateSql($table, $data, $criteria);
-        
-        return $this->_driver->exec($sql);
-    } // END function _update
     
     /**
      * Generate an SQL update string.
@@ -237,18 +190,6 @@ class Pdo extends GatewayAbstract implements GatewayInterface
         
         return "UPDATE $table SET $values WHERE $where";
     } // END function _getUpdateSql
-    
-    /**
-     * Delete records from a table.
-     *
-     * @return  void
-     */
-    protected function _delete($table, array $criteria)
-    {
-        $sql = $this->_getDeleteSql($table, $criteria);
-        
-        return $this->_driver->exec($sql);
-    } // END function _delete
     
     /**
      * Generate an SQL DELETE string.
@@ -288,18 +229,46 @@ class Pdo extends GatewayAbstract implements GatewayInterface
     } // END function _getWhere
     
     /**
-     * Initialize the PDO instance.
+     * Initialize the driver instance.
      *
-     * @param   string $dsn
-     * @param   string $username
-     * @param   string $password
-     * @param   array $driverOptions
+     * @param   array $options
      * @return  void
      */
-    protected function _initPdo($dsn, $username = null, $password = null, array $driverOptions = array())
+    protected function _initDriver(array $options)
     {
+        $dsn = $this->_getDsn($options);
+        $driverOptions = array();
+        
+        if (isset($options['driverOptions'])) {
+            $driverOptions = $options['driverOptions'];
+        }
+        
+        $user = isset($options['user']) ? $options['user'] : null;
+        $pass = isset($options['pass']) ? $options['pass'] : null;
         $class = $this->_driverClass;
-        $this->_driver = new $class($dsn, $username, $password, $driverOptions);
-    } // END function _initPdo
+        
+        $this->_driver = new $class($dsn, $user, $pass, $driverOptions);
+        
+    } // END function _initDriver
+    
+    /**
+     * Return a DSN string from array of options.
+     *
+     * @param   array $options
+     * @return  string
+     */
+    protected function _getDsn(array $options)
+    {
+        $dsn = "mysql:host={$options['host']};";
+        
+        if (isset($options['port'])) {
+            $dsn .= "port={$options['port']};";
+        }
+        
+        $dsn .= "dbname={$options['name']}";
+        
+        return $dsn;
+        
+    } // END function _getDsn
     
 } // END class Pdo

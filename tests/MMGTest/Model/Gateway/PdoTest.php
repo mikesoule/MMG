@@ -43,10 +43,12 @@ class PdoTest extends TestCase
      * @var array
      */
     public $options = array(
-        'driverClass'      => '\\MMGTest\\Model\\Gateway\\PDOMock',
-        'dsn'           => 'mysql:dbname=testdb;host=localhost',
-        'username'      => 'testuser',
-        'password'      => 'testpass',
+        'driverClass'   => '\\MMGTest\\Model\\Gateway\\PDOMock',
+        'host'          => 'localhost',
+        'port'          => 9999,
+        'name'          => 'testdb',
+        'user'          => 'testuser',
+        'pass'          => 'testpass',
         'driverOptions' => array(),
     );
     
@@ -146,7 +148,6 @@ class PdoTest extends TestCase
         
         $this->pdo->expects($this->once())
                   ->method('lastInsertId')
-                  ->with($this->identicalTo($sequence))
                   ->will($this->returnValue($insertId));
         
         $result = $this->gateway->create($table, $data, $sequence);
@@ -190,6 +191,7 @@ class PdoTest extends TestCase
         
         $this->assertEquals($expected, $result1);
         $this->assertEquals($expected, $result2);
+        
     } // END function testRead
     
     /**

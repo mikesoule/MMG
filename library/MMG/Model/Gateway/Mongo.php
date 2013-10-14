@@ -14,11 +14,10 @@
 namespace MMG\Model\Gateway;
 
 /**
- * Require the gateway interface.
+ * Require the gateway abstract and interface.
  */
+require_once dirname(__FILE__) . '/GatewayAbstract.php';
 require_once dirname(__FILE__) . '/GatewayInterface.php';
-
-use MongoClient;
 
 /**
  * Mongo Gateway class.
@@ -32,59 +31,121 @@ use MongoClient;
  * @license     http://mikesoule.github.com/license.html New BSD License
  * @version     Release: 0.0.1
  */
-class Mongo implements GatewayInterface
+class Mongo extends GatewayAbstract implements GatewayInterface
 {
     
     /**
-     * MongoDB instance
-     *
-     * @var \MongoDB
-     */
-    protected $_driver;
-    
-    /**
      * Name of driver class to use.
+     * 
+     * NOTE: In this gateway, the driver is an instance of MongoDB but
+     * MongoClient must be instantiated first and then provides
+     * the MOngoDB instance.
      *
      * @var string
      */
-    protected $_driverClass = 'MongoDB';
+    protected $_driverClass = '\MongoClient';
     
     /**
-     * Constructor
+     * List of required driver options.
      *
-     * @param   array $options
-     * @return  void
+     * @var array
      */
-    public function __construct($options = array())
-    {    
-        if (array_key_exists('driverClass', $options)) {
-            $this->_driverClass = $options['driverClass'];
-        }
-        
-        if (array_key_exists('driver', $options)) {
-            $this->_setDriver($options['driver']);
-        }
-        
-        if (is_object($this->_driver)) {
-            $this->_initDriver($options);
-        }
-        
-    } // END function __construct
+    protected $_requiredOptions = array('host', 'name');
     
     /**
      * Store a new record.
      *
-     * @param   string $store The collection or function for storing data
+     * @param   string $collection The collection for storing data
      * @param   array $data The data to be stored
-     * @param   string $sequence The sequence name for a primary/increment key
-     * @param   boolean $isFunction Flag for calling database functions
      * @return  interger|string Unique identifier
      * @todo    Implement calling database functions
      */
-    public function create($store, array $data, $sequence = null, $isFunction = false)
+    public function create($collection, array $data)
     {
-        return $this->_insert($store, $data, $sequence);
+        $data = $this->_setMongoId($data, true);
+        
+        $this->_driver->$collection->insert($data);
+        
+        return (string) $data['_id'];
+        
     } // END function create
+    
+    /**
+     * Read data from storage.
+     *
+     * @param   string $collection The collection to read from
+     * @param   array $criteria Criteria for updating
+     * @return  array Multi-dimensional array of data read from storage
+     */
+    public function read($collection, $criteria = array())
+    {
+        $criteria = $this->_setMongoId($criteria);
+        
+        $cursor = $this->_driver->$collection->find($criteria);
+        
+        return iterator_to_array($cursor);
+        
+    } // END function read
+    
+    /**
+     * Update data in storage.
+     *
+     * @param   string $collection The collection to update
+     * @param   array $data The data to be updated
+     * @param   array $criteria Criteria for updating
+     * @return  integer The number of items updated
+     */
+    public function update($collection, array $data, $criteria = array())
+    {
+        $data = $this->_setMongoId($data);
+        $criteria = $this->_setMongoId($criteria);
+        
+        $this->_driver->$collection->update($criteria, $data);
+        
+        $results = $this->_driver->lastError();
+        
+        return $results['n'];
+        
+    } // END function update
+    
+    /**
+     * Delete data from storage.
+     *
+     * @param   string $collection The collection to delete from
+     * @param   array $criteria Criteria for deletion
+     * @return  integer The number of items removed
+     */
+    public function delete($collection, $criteria = array())
+    {
+        $criteria = $this->_setMongoId($criteria);
+        
+        $this->_driver->$collection->remove($criteria);
+        
+        $results = $this->_driver->lastError();
+        
+        return $results['n'];
+        
+    } // END function delete
+    
+    /**
+     * Sets the Mongo ID param in an array.
+     *
+     * @param   array $data
+     * @param   boolean $force Force setting Mongo ID
+     * @return  array
+     */
+    protected function _setMongoId(array $data, $force = false)
+    {
+        $mongoId = isset($data['_id']) ? $data['_id'] : null;
+        
+        if ($mongoId || $force) {
+            unset($data['id']);
+            $data = array('_id' => new \MongoId($mongoId)) + $data;
+        }
+        
+        return $data;
+        
+    } // END function _setMongoId
     
     /**
      * Initialize the driver instance.
@@ -94,12 +155,51 @@ class Mongo implements GatewayInterface
      */
     protected function _initDriver(array $options)
     {
-        if (empty($options['host'])) {
-            throw new \Exception('STOPPED HERE');
+        $dsn = $this->_getDsn($options);
+        $db = $options['name'];
+        $driverOptions = array();
+        
+        if (isset($options['driverOptions'])) {
+            $driverOptions = $options['driverOptions'];
         }
         
         $class = $this->_driverClass;
-        $this->_driver = new $class($dsn, $username, $password, $driverOptions);
-    } // END function _initPdo
+        $connection = new $class($dsn, $driverOptions);
+        $this->_driver = $connection->$db;
+        
+    } // END function _initDriver
+    
+    /**
+     * Return a DSN string from array of options.
+     *
+     * @param   array $options
+     * @return  string
+     */
+    protected function _getDsn(array $options)
+    {
+        $dsn = 'mongodb://';
+        
+        if (isset($options['user'], $options['pass'])) {
+            $dsn .= "{$options['user']}:{$options['pass']}@";
+        }
+        
+        settype($options['host'], 'array');
+        settype($options['port'], 'array');
+        $firstKey = key($options['host']);
+        
+        foreach ($options['host'] as $key => $val) {
+            $port = null;
+            
+            if (isset($options['port'][$key])) {
+                $port = ':' . $options['port'][$key];
+            }
+            
+            $dsn .= ($key == $firstKey) ? ',' : null;
+            $dsn .= $val . $port;
+        }
+        
+        return "$dsn/{$options['name']}";
+        
+    } // END function _getDsn
     
 } // END class Mongo

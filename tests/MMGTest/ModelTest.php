@@ -501,6 +501,32 @@ class ModelTest extends TestCase
         
         $this->assertEquals($expected, $actual);
     } // END function testGetIdentity
+    
+    /**
+     * Test getting and setting nested data.
+     *
+     * @return  void
+     */
+    public function testNestedData()
+    {
+        $model = new Model;
+        
+        $prop1 = 'abc';
+        $prop2 = 'def';
+        $nested = 'qux';
+        $arrNested = array('one', 'two', 'three');
+        
+        $model->prop1 = $prop1;
+        $model->foo->bar->baz = $nested;
+        $model->oneFish->twoFish = $arrNested;
+        $model->prop2 = $prop2;
+        
+        $this->assertEquals($prop1, $model->prop1);
+        $this->assertEquals($nested, $model->foo->bar->baz);
+        $this->assertEquals($arrNested, $model->oneFish->twoFish);
+        $this->assertEquals($prop2, $model->prop2);
+        
+    } // END function testNestedData
 
     /**
      * Create a mock model with optional data

@@ -76,14 +76,6 @@ abstract class Mapper
     protected static $_gateways = array();
     
     /**
-     * Name of the gateway for this mapper (corresponds to a key in the 
-     * $_gateways stack).
-     *
-     * @var string
-     */
-    protected $_gateway;
-    
-    /**
      * Constructor
      *
      * @param   array $options
@@ -97,10 +89,6 @@ abstract class Mapper
         
         if (array_key_exists('idProperty', $options)) {
             $this->_idProperty = $options['idProperty'];
-        }
-        
-        if (array_key_exists('gateway', $options)) {
-            $this->_gateway = $options['gateway'];
         }
     } // END function __construct
     

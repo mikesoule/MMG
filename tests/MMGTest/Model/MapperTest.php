@@ -87,7 +87,6 @@ class MapperTest extends TestCase
         $options = array(
             'modelClass'    => 'Test_Model_Class',
             'idProperty'    => 'testId',
-            'gateway'       => 'testGateway',
         );
         
         $mapper = $this->_getMockMapper();
@@ -512,10 +511,6 @@ class MapperTest extends TestCase
         Mapper::addGateway($this->gatewayName, $this->gateway);
         
         $reflection = new ReflectionClass($mapper);
-        
-        $property = $reflection->getProperty('_gateway');
-        $property->setAccessible(true);
-        $property->setValue($mapper, $this->gatewayName);
         
         return $mapper;
     } // END function _getMockMapper

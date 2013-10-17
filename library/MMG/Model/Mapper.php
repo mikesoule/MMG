@@ -268,22 +268,6 @@ abstract class Mapper
     } // END function _getGateway
     
     /**
-     * Convert DateTime object to string.
-     *
-     * @param   DateTime $date
-     * @return  string
-     */
-    protected function _convertDateTime(DateTime $date)
-    {
-        if ($date->format('H:i:s') == '00:00:00') {
-            return $date->format('Y-m-d');
-        }
-        
-        return $date->format('Y-m-d H:i:s');
-        
-    } // END function _convertDateTime
-    
-    /**
      * Returns a collection of models from the given data.
      *
      * @param   array $results Result set as associative array

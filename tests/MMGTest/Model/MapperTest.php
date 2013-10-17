@@ -422,45 +422,6 @@ class MapperTest extends TestCase
     } // END function test_getModelInstance
     
     /**
-     * Provides data for testing conversion of DateTime objects to strings.
-     *
-     * @return  array
-     */
-    public function provide_convertDateTime()
-    {
-        return array(
-            'with-time' => array(
-                '2013-07-04 10:02:54',
-                new DateTime('2013-07-04 10:02:54')
-            ),
-            'without-time' => array(
-                '2013-07-04',
-                new DateTime('2013-07-04')
-            ),
-        );
-    } // END function provide_convertDateTime
-    
-    /**
-     * Test converting DateTime objects to string for storage.
-     *
-     * @param   string $expected The expected date string as 'Y-m-d H:i:s'.
-     * @param   DateTime $date The DateTime object to convert.
-     * @return  string
-     * @dataProvider    provide_convertDateTime
-     */
-    public function test_convertDateTime($expected, DateTime $date)
-    {
-        $mapper = $this->_getMockMapper();
-        
-        $reflection = new ReflectionClass($mapper);
-        $method = $reflection->getMethod('_convertDateTime');
-        $method->setAccessible(true);
-        $result = $method->invoke($mapper, $date);
-        
-        $this->assertEquals($expected, $result);
-    } // END function test_convertDateTime
-    
-    /**
      * Return a mock model with specified data.
      *
      * @param   array $data

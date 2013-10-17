@@ -10,6 +10,8 @@
  */
 namespace MMG\Model\Gateway;
 
+require_once dirname(__FILE__) . '/../Exception.php';
+
 /**
  * Gateway exception class
  *

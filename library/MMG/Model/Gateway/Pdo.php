@@ -19,6 +19,8 @@ namespace MMG\Model\Gateway;
 require_once dirname(__FILE__) . '/GatewayAbstract.php';
 require_once dirname(__FILE__) . '/GatewayInterface.php';
 
+use MMG\Model\Gateway\GatewayInterface;
+
 /**
  * PDO Gateway class.
  * 

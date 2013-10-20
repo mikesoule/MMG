@@ -18,11 +18,13 @@ namespace MMGTest\Model;
 require_once dirname(__FILE__) . '/../../library/MMG/Model.php';
 require_once dirname(__FILE__) . '/../../library/MMG/Model/Exception.php';
 require_once dirname(__FILE__) . '/../../library/MMG/Model/Mapper.php';
+require_once dirname(__FILE__) . '/../../library/MMG/Model/NestedTrait.php';
 
 use PHPUnit_Framework_TestCase as TestCase;
 use MMG\Model\Model;
 use MMG\Model\Exception;
 use MMG\Model\Mapper\Mapper;
+use MMG\Model\NestedTrait;
 use DateTime;
 use ReflectionClass, ReflectionObject, ReflectionMethod, ReflectionProperty;
 
@@ -509,7 +511,7 @@ class ModelTest extends TestCase
      */
     public function testNestedData()
     {
-        $model = new Model;
+        $model = new NestableModel;
         
         $prop1 = 'abc';
         $prop2 = 'def';
@@ -584,3 +586,26 @@ class ModelTest extends TestCase
     }
 
 } //END class ModelTest
+
+class NestableModel extends Model
+{
+    use NestedTrait;
+    
+    /**
+     * @param   mixed $prop1
+     * @return  void
+     */
+    public function setProp1($value)
+    {
+        $this->_data['prop1'] = $value;
+    } // END function setProp1
+    
+    /**
+     * @return  mixed
+     */
+    public function getProp1()
+    {
+        return $this->_data['prop1'];
+    } // END function getProp1
+    
+} // END class NestableModel

@@ -327,6 +327,33 @@ class MapperTest extends TestCase
     } // END function testFindOne
     
     /**
+     * Test searching for a single model with no results.
+     *
+     * @return  void
+     */
+    public function testFindOneNull()
+    {
+        $mockModel = $this->_getMockModel();
+        $modelClass = get_class($mockModel);
+        
+        $mapper = $this->_getMockMapper(
+            array('modelClass' => $modelClass),
+            array(
+                '_mapToSearchGateway', '_mapToGateways', '_mapToModel', 'find'
+            )
+        );
+        
+        $mapper->expects($this->once())
+            ->method('find')
+            ->will($this->returnValue(new Collection));
+        
+        $result = $mapper->findOne(array('id' => 1));
+        
+        $this->assertNull($result);
+        
+    } // END function testFindOneNull
+    
+    /**
      * Test getting an existing and non-existing gateway.
      *
      * @return  void

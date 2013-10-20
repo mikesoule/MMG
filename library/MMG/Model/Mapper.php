@@ -181,6 +181,7 @@ abstract class Mapper
         if ($collection->count()) {
             return $collection->shift();
         }
+        
     } // END function findOne
     
     /**
@@ -195,6 +196,7 @@ abstract class Mapper
         $identity = $model->getIdentity();
         
         self::$_modelInstances[$class][$identity] = $model;
+        
     } // END function _addModelInstance
     
     /**

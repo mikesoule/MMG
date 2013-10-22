@@ -56,10 +56,8 @@ class Collection
      */
     public function getByIdentity($identity)
     {
-        foreach ($this as $model) {
-            if ($model->getIdentity() == $identity) {
-                return $model;
-            }
+        if (isset($this->_models[$identity])) {
+            return $this->_models[$identity];
         }
         
         return null;
@@ -72,7 +70,7 @@ class Collection
      */
     public function push(Model $model)
     {
-        $this->_models[] = $model;
+        $this->_models[$model->getIdentity()] = $model;
         
         return $this;
     } // END function push

@@ -192,10 +192,9 @@ abstract class Mapper
      */
     protected function _addModelInstance(Model $model)
     {
-        $class = get_class($model);
         $identity = $model->getIdentity();
         
-        self::$_modelInstances[$class][$identity] = $model;
+        self::$_modelInstances[$this->_modelClass][$identity] = $model;
         
     } // END function _addModelInstance
     
